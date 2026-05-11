@@ -1,0 +1,13 @@
+approval_policy = "on-request"
+
+project_doc_max_bytes = 65536
+
+[profiles.default]
+approval_policy = "on-request"
+
+[profiles.deep-review]
+model_reasoning_effort = "high"
+approval_policy = "on-request"
+
+[profiles.safe-fix]
+approval_policy = "on-request"

@@ -41,3 +41,11 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Optional: personal Codex project config
+# .codex/config.toml
