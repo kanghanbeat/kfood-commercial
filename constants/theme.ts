@@ -8,6 +8,16 @@ import { Platform } from 'react-native';
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
+export const KFoodColors = {
+  kimchi: '#D94F30',
+  leaf: '#2E7D5B',
+  rice: '#FFF8EA',
+  charcoal: '#202124',
+  stone: '#6B7280',
+  border: '#E6E1D8',
+  surface: '#FFFFFF',
+};
+
 export const Colors = {
   light: {
     text: '#11181C',
