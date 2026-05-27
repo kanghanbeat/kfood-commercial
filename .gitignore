@@ -44,8 +44,12 @@ app-example
 
 # Environment variables
 .env
+.env.local
+.env.production
+.env.preview
 .env.*
 !.env.example
+supabase/.env
 
 # Optional: personal Codex project config
 # .codex/config.toml

@@ -1,13 +1,10 @@
-approval_policy = "on-request"
-
-project_doc_max_bytes = 65536
-
-[profiles.default]
-approval_policy = "on-request"
-
-[profiles.deep-review]
+model = "gpt-5.5"
+model_provider = "openai"
 model_reasoning_effort = "high"
-approval_policy = "on-request"
 
-[profiles.safe-fix]
 approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+
+[agents]
+max_threads = 4
+max_depth = 1

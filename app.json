@@ -1,17 +1,25 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "K-Food Travel",
+    "slug": "k-food-travel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "kfoodtravel",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kfoodtravel.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "맛집 사진 촬영 및 커뮤니티 업로드를 위해 카메라 권한이 필요합니다.",
+        "NSPhotoLibraryUsageDescription": "저장된 음식/여행 사진을 선택하고 프로필 이미지를 설정하기 위해 사진 라이브러리 접근 권한이 필요합니다."
+      }
     },
     "android": {
+      "package": "com.kfoodtravel.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

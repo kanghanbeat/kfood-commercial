@@ -1,39 +1,91 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const theme = {
+  colors: {
+    primary: '#FF6B35',
+    secondary: '#2EC4B6',
+    accent: '#FFD700',
+    error: '#EF4444',
+    background: '#F9F9F9',
+    surface: '#FFFFFF',
+    textPrimary: '#1F2937',
+    textSecondary: '#6B7280',
+    border: '#E5E7EB',
+    success: '#22C55E',
+    warning: '#F59E0B',
+    disabled: '#D1D5DB',
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 20,
+    xxl: 32,
+  },
+  radius: {
+    card: 16,
+    input: 12,
+    button: 12,
+  },
+  typography: {
+    fontFamily: Platform.select({
+      web: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+      default: 'System',
+    }),
+    size: {
+      title: 28,
+      subtitle: 20,
+      body: 16,
+      caption: 13,
+    },
+    weight: {
+      regular: '400',
+      medium: '500',
+      semibold: '600',
+      bold: '700',
+    },
+  },
+  shadow: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  layout: {
+    maxContentWidth: 600,
+    screenPadding: 20,
+  },
+};
 
+// Compatibility exports for starter components that are still kept in the project.
 export const KFoodColors = {
-  kimchi: '#D94F30',
-  leaf: '#2E7D5B',
+  kimchi: theme.colors.primary,
+  leaf: theme.colors.secondary,
   rice: '#FFF8EA',
-  charcoal: '#202124',
-  stone: '#6B7280',
-  border: '#E6E1D8',
-  surface: '#FFFFFF',
+  charcoal: theme.colors.textPrimary,
+  stone: theme.colors.textSecondary,
+  border: theme.colors.border,
+  surface: theme.colors.surface,
 };
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: theme.colors.textPrimary,
+    background: theme.colors.background,
+    tint: theme.colors.primary,
+    icon: theme.colors.textSecondary,
+    tabIconDefault: theme.colors.textSecondary,
+    tabIconSelected: theme.colors.primary,
   },
   dark: {
     text: '#ECEDEE',
     background: '#151718',
-    tint: tintColorDark,
+    tint: theme.colors.primary,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: theme.colors.primary,
   },
 };
 
