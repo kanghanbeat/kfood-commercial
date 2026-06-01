@@ -1,13 +1,10 @@
 import { Tabs } from "expo-router";
 import React from "react";
 
-import { HapticTab } from "@/components/haptic-tab";
 import { theme } from "@/constants/theme";
 
 const hiddenTabOptions = {
   href: null,
-  tabBarButton: () => null,
-  tabBarItemStyle: { display: "none" as const },
 };
 
 export default function TabLayout() {
@@ -21,7 +18,6 @@ export default function TabLayout() {
           borderTopColor: theme.colors.border,
         },
         headerShown: false,
-        tabBarButton: HapticTab,
       }}
     >
       <Tabs.Screen
