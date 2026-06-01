@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -99,6 +99,10 @@ export default function ProfileScreen() {
     router.replace('../login');
   }
 
+  function handleOpenUpload() {
+    router.push('/upload' as Href);
+  }
+
   return (
     <ScreenContainer>
       <View style={styles.header}>
@@ -184,6 +188,7 @@ export default function ProfileScreen() {
       </AppCard>
 
       <AppCard style={styles.profileCard}>
+        <AppButton title="+ Create Post" onPress={handleOpenUpload} />
         <AppButton title="Log Out" variant="outline" onPress={handleLogout} />
       </AppCard>
     </ScreenContainer>

@@ -70,7 +70,7 @@ function CandidateRows({ title, candidates }: { title: string; candidates: Candi
   );
 }
 
-export default function UploadScreen() {
+export default function MockFoodVisionScreen() {
   const [status, setStatus] = useState<FoodImageUploadStatus>('idle');
   const [result, setResult] = useState<FoodLabelAnalysisResult | null>(null);
 

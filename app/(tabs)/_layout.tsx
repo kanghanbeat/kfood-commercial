@@ -1,9 +1,14 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Text } from 'react-native';
+import { Tabs } from "expo-router";
+import React from "react";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { theme } from '@/constants/theme';
+import { HapticTab } from "@/components/haptic-tab";
+import { theme } from "@/constants/theme";
+
+const hiddenTabOptions = {
+  href: null,
+  tabBarButton: () => null,
+  tabBarItemStyle: { display: "none" as const },
+};
 
 export default function TabLayout() {
   return (
@@ -17,57 +22,40 @@ export default function TabLayout() {
         },
         headerShown: false,
         tabBarButton: HapticTab,
-      }}>
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>Home</Text>,
+          tabBarLabel: "Home",
+          title: "Home",
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Map',
-          tabBarLabel: 'Map',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>Map</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="create"
-        options={{
-          title: 'Create',
-          tabBarLabel: '+',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>+</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="upload"
-        options={{
-          title: 'Upload',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>AI</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>Find</Text>,
-        }}
-      />
-      <Tabs.Screen
-        name="ranking"
-        options={{
-          title: 'Ranking',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>Rank</Text>,
+          tabBarLabel: "Map",
+          title: "Map",
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <Text style={{ color }}>Me</Text>,
+          tabBarLabel: "Profile",
+          title: "Profile",
         }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={hiddenTabOptions}
+      />
+      <Tabs.Screen
+        name="create"
+        options={hiddenTabOptions}
+      />
+      <Tabs.Screen
+        name="ranking"
+        options={hiddenTabOptions}
       />
     </Tabs>
   );

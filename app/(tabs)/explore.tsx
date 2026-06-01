@@ -1,63 +1,41 @@
-import { useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import {
+  getDefaultRecommendations,
+  getFallbackRecommendations,
+  getMatchLabel,
+  getRecommendationReason,
+  getSearchResults,
+  mapDestinations,
+  type SearchResult,
+} from '@/constants/mockSearchData';
 import { theme } from '@/constants/theme';
 
 // This file is named `explore.tsx` for current Expo Router compatibility, but the user-facing tab is "Map".
 // This screen should behave as a map-based destination discovery screen, not as a general Explore list.
-type MapDestination = {
-  id: string;
-  name: string;
-  region: string;
-  representativeFood: string;
-  description: string;
-  markerTop: `${number}%`;
-  markerLeft: `${number}%`;
-};
-
-const mapDestinations: MapDestination[] = [
-  {
-    id: 'seoul',
-    name: 'Seoul',
-    region: 'Capital Area',
-    representativeFood: 'Gwangjang Market bindaetteok',
-    description: 'Follow street-food alleys, palace neighborhoods, and night market stops in one city route.',
-    markerTop: '24%',
-    markerLeft: '48%',
-  },
-  {
-    id: 'jeonju',
-    name: 'Jeonju',
-    region: 'Jeollabuk-do',
-    representativeFood: 'Jeonju bibimbap',
-    description: 'Preview a hanok village route built around bibimbap, makgeolli streets, and local side dishes.',
-    markerTop: '52%',
-    markerLeft: '40%',
-  },
-  {
-    id: 'busan',
-    name: 'Busan',
-    region: 'Gyeongsangnam-do Coast',
-    representativeFood: 'Dwaeji gukbap',
-    description: 'Trace a coastal food path through markets, harbor views, milmyeon shops, and gukbap districts.',
-    markerTop: '67%',
-    markerLeft: '69%',
-  },
-  {
-    id: 'jeju',
-    name: 'Jeju',
-    region: 'Jeju Island',
-    representativeFood: 'Black pork barbecue',
-    description: 'Plan an island route for black pork, seafood, citrus cafes, and scenic local markets.',
-    markerTop: '83%',
-    markerLeft: '32%',
-  },
-];
+function hasSearchValue(value: string): boolean {
+  return value.trim().length > 0;
+}
 
 export default function ExploreScreen() {
   const [selectedDestinationId, setSelectedDestinationId] = useState('jeonju');
+  const [searchQuery, setSearchQuery] = useState('');
   const [actionMessage, setActionMessage] = useState('');
 
+  const searchResults = useMemo(() => getSearchResults(searchQuery), [searchQuery]);
+  const defaultRecommendations = useMemo(() => getDefaultRecommendations(), []);
+  const fallbackRecommendations = useMemo(() => getFallbackRecommendations(), []);
+  const hasSearchQuery = hasSearchValue(searchQuery);
+  const relatedRecommendations = hasSearchQuery
+    ? searchResults.length > 0
+      ? searchResults.slice(0, 4)
+      : fallbackRecommendations
+    : defaultRecommendations;
+  const matchedDestinationIds = useMemo(
+    () => new Set(searchResults.map((result) => result.destinationId)),
+    [searchResults],
+  );
   const selectedDestination =
     mapDestinations.find((destination) => destination.id === selectedDestinationId) ?? mapDestinations[1];
 
@@ -69,12 +47,51 @@ export default function ExploreScreen() {
     setActionMessage('External Google Maps linking will be connected in a later phase.');
   }
 
+  function handleSelectSearchResult(result: SearchResult) {
+    setSelectedDestinationId(result.destinationId);
+    setActionMessage(`${result.place.name} is selected on the map for a future place detail page.`);
+  }
+
+  function handleClearSearch() {
+    setSearchQuery('');
+    setActionMessage('');
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>K-Food Travel Map</Text>
           <Text style={styles.subtitle}>Tap a destination marker to preview local food routes.</Text>
+        </View>
+
+        <View style={styles.searchSection}>
+          <View style={styles.searchInputRow}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              accessibilityLabel="Search regions, foods, places, and keywords"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={setSearchQuery}
+              placeholder="Search Jeonju, bibimbap, black pork, market..."
+              placeholderTextColor={theme.colors.textSecondary}
+              style={styles.searchInput}
+              value={searchQuery}
+            />
+            {hasSearchQuery ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={handleClearSearch}
+                style={({ pressed }) => [styles.clearButton, pressed && styles.pressed]}>
+                <Text style={styles.clearButtonText}>Clear</Text>
+              </Pressable>
+            ) : null}
+          </View>
+          <Text style={styles.resultSummary}>
+            {hasSearchQuery
+              ? `${searchResults.length} K-Food route${searchResults.length === 1 ? '' : 's'} found`
+              : 'Search by region, city, food, restaurant, tag, or description.'}
+          </Text>
         </View>
 
         <View style={styles.mapContainer}>
@@ -85,6 +102,7 @@ export default function ExploreScreen() {
 
           {mapDestinations.map((destination) => {
             const isActive = destination.id === selectedDestination.id;
+            const isSearchMatch = hasSearchQuery && matchedDestinationIds.has(destination.id);
 
             return (
               <Pressable
@@ -101,6 +119,7 @@ export default function ExploreScreen() {
                     top: destination.markerTop,
                     left: destination.markerLeft,
                   },
+                  isSearchMatch && styles.markerSearchMatch,
                   isActive && styles.markerActive,
                   pressed && styles.markerPressed,
                 ]}>
@@ -111,11 +130,72 @@ export default function ExploreScreen() {
           })}
         </View>
 
+        {hasSearchQuery ? (
+          <View style={styles.resultsContainer}>
+            <Text style={styles.resultsTitle}>Search Results</Text>
+            {searchResults.length > 0 ? (
+              searchResults.map((result) => (
+                <Pressable
+                  accessibilityRole="button"
+                  key={result.place.id}
+                  onPress={() => handleSelectSearchResult(result)}
+                  style={({ pressed }) => [styles.resultCard, pressed && styles.pressed]}>
+                  <View style={styles.resultHeader}>
+                    <Text style={styles.resultTitle}>{result.place.name}</Text>
+                    <View style={styles.matchBadge}>
+                      <Text style={styles.matchBadgeText}>{getMatchLabel(result.matchType)}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.resultFood}>{result.place.foodName}</Text>
+                  <Text style={styles.resultMeta}>
+                    {result.destinationName} · {result.place.city} · {result.region}
+                  </Text>
+                  <Text style={styles.resultDescription}>{result.place.description}</Text>
+                  <View style={styles.tagRow}>
+                    {result.place.tags.slice(0, 4).map((tag) => (
+                      <Text key={`${result.place.id}-${tag}`} style={styles.tagChip}>
+                        {tag}
+                      </Text>
+                    ))}
+                  </View>
+                </Pressable>
+              ))
+            ) : (
+              <View style={styles.emptyResultBox}>
+                <Text style={styles.emptyResultTitle}>No matching K-Food routes found yet.</Text>
+                <Text style={styles.emptyResultText}>Try Busan, milmyeon, Jeju, black pork, or market.</Text>
+              </View>
+            )}
+          </View>
+        ) : null}
+
+        <View style={styles.recommendationSection}>
+          <Text style={styles.resultsTitle}>Related Recommendations</Text>
+          <View style={styles.resultsContainer}>
+            {relatedRecommendations.map((result) => (
+              <Pressable
+                accessibilityRole="button"
+                key={`recommendation-${result.place.id}`}
+                onPress={() => handleSelectSearchResult(result)}
+                style={({ pressed }) => [styles.resultCard, pressed && styles.pressed]}>
+                <Text style={styles.resultTitle}>{result.place.name}</Text>
+                <Text style={styles.resultMeta}>
+                  {result.place.foodName} · {result.destinationName} / {result.place.city}
+                </Text>
+                <Text style={styles.recommendationReason}>
+                  {getRecommendationReason(result, hasSearchQuery && searchResults.length > 0)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+
         <View style={styles.previewCard}>
           <Text style={styles.previewEyebrow}>{selectedDestination.region}</Text>
           <Text style={styles.previewTitle}>{selectedDestination.name}</Text>
           <Text style={styles.foodText}>{selectedDestination.representativeFood}</Text>
           <Text style={styles.description}>{selectedDestination.description}</Text>
+          <Text style={styles.placeSummary}>{selectedDestination.places.length} mock K-Food places ready for route planning</Text>
 
           <Pressable
             accessibilityRole="button"
@@ -167,6 +247,54 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: theme.typography.size.body,
     lineHeight: 24,
+  },
+  searchSection: {
+    width: '100%',
+    maxWidth: theme.layout.maxContentWidth,
+    gap: theme.spacing.sm,
+  },
+  searchInputRow: {
+    minHeight: 52,
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    ...theme.shadow,
+  },
+  searchIcon: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.body,
+    fontWeight: '700',
+  },
+  searchInput: {
+    flex: 1,
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.size.body,
+    minWidth: 0,
+    paddingVertical: theme.spacing.xs,
+  },
+  resultSummary: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  clearButton: {
+    borderRadius: theme.radius.button,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+  },
+  clearButtonText: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '700',
   },
   mapContainer: {
     width: '100%',
@@ -245,6 +373,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     elevation: 4,
   },
+  markerSearchMatch: {
+    borderColor: theme.colors.secondary,
+    backgroundColor: '#ECFEFF',
+  },
   markerPressed: {
     opacity: 0.86,
   },
@@ -264,6 +396,110 @@ const styles = StyleSheet.create({
   },
   markerLabelActive: {
     color: theme.colors.primary,
+  },
+  resultsContainer: {
+    width: '100%',
+    maxWidth: theme.layout.maxContentWidth,
+    gap: theme.spacing.md,
+  },
+  resultsTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.size.subtitle,
+    fontWeight: '700',
+  },
+  resultCard: {
+    gap: theme.spacing.sm,
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.lg,
+  },
+  resultHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+    justifyContent: 'space-between',
+  },
+  resultTitle: {
+    flex: 1,
+    minWidth: 180,
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.size.body,
+    fontWeight: '700',
+    lineHeight: 22,
+  },
+  matchBadge: {
+    borderRadius: 999,
+    backgroundColor: '#FFF7ED',
+    overflow: 'hidden',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  matchBadgeText: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '700',
+  },
+  resultFood: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.size.body,
+    fontWeight: '700',
+  },
+  resultMeta: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  resultDescription: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    lineHeight: 20,
+  },
+  tagRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+  },
+  tagChip: {
+    borderRadius: 999,
+    backgroundColor: theme.colors.background,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '600',
+    overflow: 'hidden',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  recommendationSection: {
+    width: '100%',
+    maxWidth: theme.layout.maxContentWidth,
+    gap: theme.spacing.md,
+  },
+  recommendationReason: {
+    color: theme.colors.secondary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '700',
+  },
+  emptyResultBox: {
+    gap: theme.spacing.xs,
+    borderRadius: theme.radius.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.lg,
+  },
+  emptyResultTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.size.body,
+    fontWeight: '700',
+  },
+  emptyResultText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    lineHeight: 20,
   },
   previewCard: {
     width: '100%',
@@ -296,6 +532,11 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: theme.typography.size.body,
     lineHeight: 24,
+  },
+  placeSummary: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: '700',
   },
   primaryButton: {
     minHeight: 52,
