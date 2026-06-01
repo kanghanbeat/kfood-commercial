@@ -1,131 +1,108 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/common/AppCard';
 import { ScreenContainer } from '@/components/common/ScreenContainer';
-import { PodiumItem } from '@/components/gamification/PodiumItem';
 import { theme } from '@/constants/theme';
-import { getRankings, getTopRankings } from '@/services/rankingService';
-import type { UserRankingStats } from '@/types/gamification';
-import type { RankingPeriod, RankingUser } from '@/types/ranking';
+
+type RankingPeriod = 'weekly' | 'monthly' | 'allTime';
+
+type RankingItem = {
+  id: string;
+  rank: number;
+  name: string;
+  points: number;
+  note: string;
+};
 
 const periodOptions: { key: RankingPeriod; label: string }[] = [
   { key: 'weekly', label: 'Weekly' },
   { key: 'monthly', label: 'Monthly' },
-  { key: 'allTime', label: 'All-time' },
+  { key: 'allTime', label: 'All Time' },
 ];
 
-function toBackendPeriod(period: RankingPeriod): 'weekly' | 'monthly' | 'all' {
-  return period === 'allTime' ? 'all' : period;
-}
-
-function toRankingUsers(rows: UserRankingStats[], period: RankingPeriod): RankingUser[] {
-  return rows
-    .map((row) => {
-      const points = period === 'weekly'
-        ? row.weekly_points
-        : period === 'monthly'
-          ? row.monthly_points
-          : row.total_points;
-
-      return {
-        id: row.user_id,
-        rank: 0,
-        displayName: row.user_id.startsWith('rank-user-') ? row.user_id.replace('rank-user-', '') : 'K-Food Traveler',
-        avatarEmoji: '🍚',
-        points,
-        stampCount: row.stamp_count,
-        badgeCount: row.badge_count,
-        regionTitle: `${row.post_count} posts · ${row.approved_food_image_count} approved images`,
-      };
-    })
-    .sort((a, b) => b.points - a.points)
-    .map((user, index) => ({
-      ...user,
-      rank: index + 1,
-    }));
-}
+const topRankings: RankingItem[] = [
+  {
+    id: 'hana-foodie',
+    rank: 1,
+    name: 'Hana Foodie',
+    points: 12400,
+    note: 'Regional stamps and approved food posts',
+  },
+  {
+    id: 'seoul-taster',
+    rank: 2,
+    name: 'Seoul Taster',
+    points: 10950,
+    note: 'Market routes and local discovery points',
+  },
+  {
+    id: 'jeju-explorer',
+    rank: 3,
+    name: 'Jeju Explorer',
+    points: 9820,
+    note: 'Island food routes and travel journals',
+  },
+];
 
 export default function RankingScreen() {
-  const [period, setPeriod] = useState<RankingPeriod>('weekly');
-  const [rankingUsers, setRankingUsers] = useState<RankingUser[]>(() => getRankings('weekly'));
-  const topThree = useMemo(() => rankingUsers.slice(0, 3), [rankingUsers]);
-  const rest = useMemo(() => rankingUsers.slice(3), [rankingUsers]);
-  const podiumOrder = [topThree[1], topThree[0], topThree[2]].filter(Boolean);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadReadOnlyRankings() {
-      const rows = await getTopRankings(toBackendPeriod(period), 20);
-
-      if (isMounted) {
-        setRankingUsers(toRankingUsers(rows, period));
-      }
-    }
-
-    loadReadOnlyRankings();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
+  const [selectedPeriod, setSelectedPeriod] = useState<RankingPeriod>('weekly');
 
   return (
     <ScreenContainer>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>SNS Ranking</Text>
-        <Text style={styles.title}>K-Food Traveler League</Text>
-        <Text style={styles.subtitle}>Points, stamps, and badges create the discovery loop.</Text>
+        <Text style={styles.eyebrow}>Competition</Text>
+        <Text style={styles.title}>K-Food Traveler Ranking</Text>
+        <Text style={styles.subtitle}>
+          Compete through food travel posts, regional stamps, and local discovery points.
+        </Text>
       </View>
 
       <View style={styles.periodRow}>
         {periodOptions.map((option) => {
-          const isSelected = option.key === period;
+          const isSelected = option.key === selectedPeriod;
 
           return (
             <Pressable
               accessibilityRole="button"
               accessibilityState={{ selected: isSelected }}
               key={option.key}
-              onPress={() => setPeriod(option.key)}
-              style={({ pressed }) => [styles.periodChip, isSelected && styles.selectedPeriodChip, pressed && styles.pressed]}>
+              onPress={() => setSelectedPeriod(option.key)}
+              style={({ pressed }) => [
+                styles.periodChip,
+                isSelected && styles.selectedPeriodChip,
+                pressed && styles.pressed,
+              ]}>
               <Text style={[styles.periodText, isSelected && styles.selectedPeriodText]}>{option.label}</Text>
             </Pressable>
           );
         })}
       </View>
 
-      <AppCard style={styles.podiumCard}>
-        <View style={styles.podiumRow}>
-          {podiumOrder.map((user) => (
-            <PodiumItem
-              height={user.rank === 1 ? 128 : user.rank === 2 ? 96 : 76}
-              highlight={user.rank === 1}
-              key={user.id}
-              user={user}
-            />
+      <AppCard style={styles.rankingCard}>
+        <Text style={styles.sectionTitle}>Top 3 Travelers</Text>
+        <View style={styles.rankingList}>
+          {topRankings.map((item) => (
+            <View key={item.id} style={styles.rankingRow}>
+              <View style={styles.rankBadge}>
+                <Text style={styles.rankBadgeText}>{item.rank}</Text>
+              </View>
+              <View style={styles.rankingBody}>
+                <Text style={styles.rankingName}>{item.name}</Text>
+                <Text style={styles.rankingNote}>{item.note}</Text>
+              </View>
+              <Text style={styles.pointsText}>{item.points.toLocaleString()} pts</Text>
+            </View>
           ))}
         </View>
       </AppCard>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Rank 4 and below</Text>
-        {rest.map((user) => (
-          <AppCard key={user.id} style={styles.rankCard}>
-            <Text style={styles.rankNumber}>#{user.rank}</Text>
-            <Text style={styles.avatar}>{user.avatarEmoji}</Text>
-            <View style={styles.rankBody}>
-              <Text style={styles.rankName}>{user.displayName}</Text>
-              <Text style={styles.rankMeta}>{user.regionTitle}</Text>
-            </View>
-            <View style={styles.rankStats}>
-              <Text style={styles.rankPoints}>{user.points.toLocaleString()}</Text>
-              <Text style={styles.rankMeta}>{user.stampCount} stamps · {user.badgeCount} badges</Text>
-            </View>
-          </AppCard>
-        ))}
-      </View>
+      <AppCard style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>Phase 1 Ranking</Text>
+        <Text style={styles.infoText}>
+          This mock leaderboard keeps the ranking entry point visible while backend scoring is prepared.
+        </Text>
+      </AppCard>
     </ScreenContainer>
   );
 }
@@ -144,6 +121,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     fontSize: theme.typography.size.title,
     fontWeight: '700',
+    lineHeight: 34,
   },
   subtitle: {
     color: theme.colors.textSecondary,
@@ -156,7 +134,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   periodChip: {
-    borderRadius: 999,
+    minWidth: 96,
+    alignItems: 'center',
+    borderRadius: theme.radius.button,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
@@ -178,59 +158,66 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.84,
   },
-  podiumCard: {
+  rankingCard: {
     padding: theme.spacing.lg,
-  },
-  podiumRow: {
-    minHeight: 220,
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: theme.spacing.sm,
-  },
-  section: {
-    gap: theme.spacing.md,
   },
   sectionTitle: {
     color: theme.colors.textPrimary,
     fontSize: theme.typography.size.subtitle,
     fontWeight: '700',
   },
-  rankCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: theme.spacing.lg,
+  rankingList: {
     gap: theme.spacing.md,
   },
-  rankNumber: {
-    color: theme.colors.primary,
+  rankingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    borderRadius: theme.radius.input,
+    backgroundColor: theme.colors.background,
+    padding: theme.spacing.md,
+  },
+  rankBadge: {
+    width: 36,
+    height: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
+    backgroundColor: theme.colors.primary,
+  },
+  rankBadgeText: {
+    color: theme.colors.surface,
     fontSize: theme.typography.size.body,
     fontWeight: '700',
-    width: 36,
   },
-  avatar: {
-    fontSize: 28,
-  },
-  rankBody: {
+  rankingBody: {
     flex: 1,
     minWidth: 0,
+    gap: theme.spacing.xs,
   },
-  rankName: {
+  rankingName: {
     color: theme.colors.textPrimary,
     fontSize: theme.typography.size.body,
     fontWeight: '700',
   },
-  rankMeta: {
+  rankingNote: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.size.caption,
     fontWeight: '600',
+    lineHeight: 18,
   },
-  rankStats: {
-    alignItems: 'flex-end',
-    maxWidth: 132,
-  },
-  rankPoints: {
+  pointsText: {
     color: theme.colors.textPrimary,
-    fontSize: theme.typography.size.body,
+    fontSize: theme.typography.size.caption,
     fontWeight: '700',
+    textAlign: 'right',
+  },
+  infoCard: {
+    padding: theme.spacing.lg,
+  },
+  infoText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.body,
+    lineHeight: 24,
   },
 });

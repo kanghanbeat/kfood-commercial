@@ -23,21 +23,24 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          tabBarLabel: "Home",
           title: "Home",
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          tabBarLabel: "Map",
           title: "Map",
+        }}
+      />
+      <Tabs.Screen
+        name="ranking"
+        options={{
+          title: "Ranking",
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          tabBarLabel: "Profile",
           title: "Profile",
         }}
       />
@@ -47,10 +50,6 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="create"
-        options={hiddenTabOptions}
-      />
-      <Tabs.Screen
-        name="ranking"
         options={hiddenTabOptions}
       />
     </Tabs>
