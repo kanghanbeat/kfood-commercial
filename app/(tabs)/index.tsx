@@ -148,8 +148,8 @@ export default function HomeScreen() {
         <Text style={styles.eyebrow}>K-Food Travel Feed</Text>
         <Text style={styles.title}>Real routes from food travelers</Text>
         <Text style={styles.subtitle}>
-          Curated food routes, traveler journals, and regional guides for planning
-          memorable Korean food trips.
+          Curated food routes, traveler journals, and regional guides for
+          planning memorable Korean food trips.
         </Text>
         <AppButton onPress={handleOpenUpload} title="+ Create Journal" />
       </View>
@@ -189,7 +189,9 @@ export default function HomeScreen() {
               pressed && styles.pressed,
             ]}
           >
-            <Text style={styles.searchPageButtonText}>Open full search results</Text>
+            <Text style={styles.searchPageButtonText}>
+              Open full search results
+            </Text>
           </Pressable>
         ) : null}
       </View>
@@ -239,7 +241,10 @@ export default function HomeScreen() {
               accessibilityRole="button"
               key={`route-${result.place.id}`}
               onPress={() => handleOpenMapResult(result)}
-              style={({ pressed }) => [styles.routeCard, pressed && styles.pressed]}
+              style={({ pressed }) => [
+                styles.routeCard,
+                pressed && styles.pressed,
+              ]}
             >
               <Text style={styles.routeTitle}>{result.destinationName}</Text>
               <Text style={styles.routeMeta}>{result.place.foodName}</Text>
@@ -249,9 +254,7 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.recommendationSection}>
-        <Text style={styles.sectionTitle}>
-          Recent traveler journals
-        </Text>
+        <Text style={styles.sectionTitle}>Recent traveler journals</Text>
         <View style={styles.emptyResultBox}>
           <Text style={styles.emptyResultText}>
             Read route notes from travelers, then continue into region, food,
