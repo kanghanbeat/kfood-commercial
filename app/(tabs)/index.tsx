@@ -1,7 +1,8 @@
-import { router, type Href } from "expo-router";
-import { useMemo, useState } from "react";
+import { router } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
+  Platform,
   Pressable,
   RefreshControl,
   SafeAreaView,
@@ -50,15 +51,20 @@ function hasSearchValue(value: string): boolean {
   return value.trim().length > 0;
 }
 
-function regionHref(destinationId: string): Href {
-  return `/regions/region-${destinationId}` as Href;
+function normalizeRouteId(value: string | null | undefined): string {
+  return typeof value === "string" ? value.trim() : "";
 }
 
-function searchHref(query: string): Href {
-  const normalizedQuery = query.trim();
-  return normalizedQuery
-    ? (`/search?query=${encodeURIComponent(normalizedQuery)}` as Href)
-    : ("/search" as Href);
+function getRegionRouteId(destinationId: string | null | undefined): string {
+  const normalizedId = normalizeRouteId(destinationId);
+  return normalizedId.startsWith("region-")
+    ? normalizedId
+    : `region-${normalizedId}`;
+}
+
+function getDisplayText(value: string | null | undefined, fallback: string) {
+  const normalizedValue = normalizeRouteId(value);
+  return normalizedValue || fallback;
 }
 
 export default function HomeScreen() {
@@ -68,7 +74,10 @@ export default function HomeScreen() {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
+  const [lastHiddenJournalId, setLastHiddenJournalId] = useState<string | null>(
+    null,
+  );
 
   const hasQuery = hasSearchValue(searchQuery);
   const searchResults = useMemo(
@@ -94,69 +103,190 @@ export default function HomeScreen() {
     [activeSortKey, hiddenJournalIds],
   );
   const featuredJournal = sortedJournals[0];
+  const totalRewardPoints = useMemo(
+    () =>
+      mockJournals.reduce(
+        (total, journal) => total + journal.pointReward,
+        0,
+      ),
+    [],
+  );
 
-  function handleHideJournal(journalId: string) {
-    setHiddenJournalIds((currentIds) => new Set([...currentIds, journalId]));
-  }
+  const handleHideJournal = useCallback((journalId: string) => {
+    const normalizedJournalId = normalizeRouteId(journalId);
 
-  function handleRefresh() {
+    if (!normalizedJournalId) {
+      setStatusMessage("This guide cannot be hidden because its ID is missing.");
+      return;
+    }
+
+    setHiddenJournalIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      nextIds.add(normalizedJournalId);
+      return nextIds;
+    });
+    setLastHiddenJournalId(normalizedJournalId);
+    setStatusMessage("Guide hidden from this session. You can restore it below.");
+  }, []);
+
+  const handleUndoHideJournal = useCallback(() => {
+    if (!lastHiddenJournalId) {
+      return;
+    }
+
+    setHiddenJournalIds((currentIds) => {
+      const nextIds = new Set(currentIds);
+      nextIds.delete(lastHiddenJournalId);
+      return nextIds;
+    });
+    setLastHiddenJournalId(null);
+    setStatusMessage("Guide restored to the curated feed.");
+  }, [lastHiddenJournalId]);
+
+  const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    setErrorMessage("");
-    setTimeout(() => setRefreshing(false), 250);
-  }
-
-  function handleOpenUpload() {
-    router.push("/upload" as Href);
-  }
-
-  function handleOpenMapResult(result: SearchResult) {
-    router.push(regionHref(result.destinationId));
-  }
-
-  function handleOpenSearchPage() {
-    router.push(searchHref(searchQuery));
-  }
-
-  function handleClearSearch() {
-    setSearchQuery("");
-  }
-
-  function renderRecommendationCard(result: SearchResult, reason: string) {
-    return (
-      <Pressable
-        accessibilityRole="button"
-        key={result.place.id}
-        onPress={() => handleOpenMapResult(result)}
-        style={({ pressed }) => [
-          styles.recommendationCard,
-          pressed && styles.pressed,
-        ]}
-      >
-        <Text style={styles.recommendationTitle}>{result.place.name}</Text>
-        <Text style={styles.recommendationMeta}>
-          {result.place.foodName} · {result.destinationName} /{" "}
-          {result.place.city}
-        </Text>
-        <Text style={styles.recommendationReason}>{reason}</Text>
-      </Pressable>
+    setStatusMessage(
+      "Curated K-Food Guide content is current for this guide catalog.",
     );
-  }
+    setRefreshing(false);
+  }, []);
+
+  const handleOpenUpload = useCallback(() => {
+    router.push("/upload");
+  }, []);
+
+  const handleOpenMapResult = useCallback((result: SearchResult) => {
+    const destinationId = normalizeRouteId(result.destinationId);
+
+    if (!destinationId) {
+      setStatusMessage(
+        "This K-Food Guide is missing a region link, so it cannot be opened yet.",
+      );
+      return;
+    }
+
+    router.push({
+      pathname: "/regions/[regionId]",
+      params: { regionId: getRegionRouteId(destinationId) },
+    });
+  }, []);
+
+  const handleOpenSearchPage = useCallback(() => {
+    const normalizedQuery = searchQuery.trim();
+
+    router.push(
+      normalizedQuery
+        ? {
+            pathname: "/search",
+            params: { query: normalizedQuery },
+          }
+        : "/search",
+    );
+  }, [searchQuery]);
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery("");
+    setStatusMessage("");
+  }, []);
+
+  const handleOpenJournal = useCallback((journalId: string) => {
+    const normalizedJournalId = normalizeRouteId(journalId);
+
+    if (!normalizedJournalId) {
+      setStatusMessage(
+        "This guide is missing a journal link, so it cannot be opened yet.",
+      );
+      return;
+    }
+
+    router.push({
+      pathname: "/journals/[journalId]",
+      params: { journalId: normalizedJournalId },
+    });
+  }, []);
+
+  const renderRecommendationCard = useCallback(
+    (result: SearchResult, reason: string, keyFallback: string) => {
+      const place = result.place;
+      const placeId = getDisplayText(
+        place?.id,
+        getDisplayText(result.destinationId, keyFallback),
+      );
+      const placeName = getDisplayText(place?.name, "K-Food Guide");
+      const foodName = getDisplayText(place?.foodName, "Featured dish");
+      const destinationName = getDisplayText(result.destinationName, "Korea");
+      const cityName = getDisplayText(place?.city, "Regional guide");
+
+      return (
+        <Pressable
+          accessibilityLabel={`${placeName}, ${foodName}, ${destinationName}. Open regional K-Food Guide.`}
+          accessibilityRole="button"
+          key={placeId}
+          onPress={() => handleOpenMapResult(result)}
+          style={({ pressed }) => [
+            styles.recommendationCard,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.recommendationTitle}>{placeName}</Text>
+          <Text style={styles.recommendationMeta}>
+            {foodName} · {destinationName} / {cityName}
+          </Text>
+          <Text style={styles.recommendationReason}>{reason}</Text>
+        </Pressable>
+      );
+    },
+    [handleOpenMapResult],
+  );
+
+  const renderJournalItem = useCallback(
+    ({ item }: { item: Journal }) => {
+      const journalId = normalizeRouteId(item.id);
+      const hideLabel = journalId
+        ? `Hide ${item.title} from this session`
+        : "Hide this guide from this session";
+
+      return (
+        <View style={styles.content}>
+          <JournalCard journal={item} onPress={() => handleOpenJournal(item.id)} />
+          <Pressable
+            accessibilityLabel={hideLabel}
+            accessibilityRole="button"
+            onPress={() => handleHideJournal(item.id)}
+            style={({ pressed }) => [
+              styles.hideActionButton,
+              pressed && styles.pressed,
+            ]}
+          >
+            <Text style={styles.hideAction}>Hide this guide</Text>
+          </Pressable>
+        </View>
+      );
+    },
+    [handleHideJournal, handleOpenJournal],
+  );
 
   const header = (
     <View style={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>K-Food Travel Feed</Text>
-        <Text style={styles.title}>Real routes from food travelers</Text>
+        <Text style={styles.eyebrow}>K-Food Travel Guide</Text>
+        <Text style={styles.title}>Featured Korean food routes</Text>
         <Text style={styles.subtitle}>
-          Curated food routes, traveler journals, and regional guides for
-          planning memorable Korean food trips.
+          Curated food routes, editor picks, and regional guides for planning
+          memorable Korean food trips.
         </Text>
         <AppButton onPress={handleOpenUpload} title="+ Create Journal" />
       </View>
 
       <View style={styles.searchSection}>
         <View style={styles.searchInputRow}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Text
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+            style={styles.searchIcon}
+          >
+            Search
+          </Text>
           <TextInput
             accessibilityLabel="Search K-Food, regions, or places"
             autoCapitalize="none"
@@ -169,6 +299,7 @@ export default function HomeScreen() {
           />
           {hasQuery ? (
             <Pressable
+              accessibilityLabel="Clear K-Food Guide search"
               accessibilityRole="button"
               onPress={handleClearSearch}
               style={({ pressed }) => [
@@ -182,6 +313,7 @@ export default function HomeScreen() {
         </View>
         {hasQuery ? (
           <Pressable
+            accessibilityLabel={`Open full K-Food Guide search results for ${searchQuery.trim()}`}
             accessibilityRole="button"
             onPress={handleOpenSearchPage}
             style={({ pressed }) => [
@@ -197,68 +329,84 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.recommendationSection}>
-        <Text style={styles.sectionTitle}>Related recommendations</Text>
+        <Text style={styles.sectionTitle}>Recommended K-Food Guides</Text>
         {hasQuery && searchResults.length === 0 ? (
           <View style={styles.emptyResultBox}>
             <Text style={styles.emptyResultTitle}>
               No matching K-Food routes found yet.
             </Text>
             <Text style={styles.emptyResultText}>
-              Showing editor-picked routes with similar food and travel themes.
+              Showing Editor Pick guides with similar food and travel themes.
             </Text>
           </View>
         ) : null}
         <View style={styles.recommendationList}>
-          {relatedRecommendations.map((result) =>
+          {relatedRecommendations.map((result, index) =>
             renderRecommendationCard(
               result,
               getRecommendationReason(
                 result,
                 hasQuery && searchResults.length > 0,
               ),
+              `recommended-guide-${index}`,
             ),
           )}
         </View>
       </View>
 
       <View style={styles.recommendationSection}>
-        <Text style={styles.sectionTitle}>Recommended K-Food Today</Text>
+        <Text style={styles.sectionTitle}>Editor Pick Today</Text>
         <View style={styles.recommendationList}>
           {todayRecommendation
             ? renderRecommendationCard(
                 todayRecommendation,
-                "Related local food recommendation",
+                "Curated local food recommendation",
+                "editor-pick-today",
               )
             : null}
         </View>
       </View>
 
       <View style={styles.recommendationSection}>
-        <Text style={styles.sectionTitle}>Popular regional food routes</Text>
+        <Text style={styles.sectionTitle}>Featured regional food routes</Text>
         <View style={styles.routeGrid}>
-          {defaultRecommendations.map((result) => (
+          {defaultRecommendations.map((result, index) => (
             <Pressable
+              accessibilityLabel={`Open ${getDisplayText(
+                result.destinationName,
+                "regional",
+              )} K-Food Guide for ${getDisplayText(
+                result.place?.foodName,
+                "featured dishes",
+              )}`}
               accessibilityRole="button"
-              key={`route-${result.place.id}`}
+              key={`route-${getDisplayText(
+                result.place?.id,
+                getDisplayText(result.destinationId, `featured-route-${index}`),
+              )}`}
               onPress={() => handleOpenMapResult(result)}
               style={({ pressed }) => [
                 styles.routeCard,
                 pressed && styles.pressed,
               ]}
             >
-              <Text style={styles.routeTitle}>{result.destinationName}</Text>
-              <Text style={styles.routeMeta}>{result.place.foodName}</Text>
+              <Text style={styles.routeTitle}>
+                {getDisplayText(result.destinationName, "Regional K-Food Guide")}
+              </Text>
+              <Text style={styles.routeMeta}>
+                {getDisplayText(result.place?.foodName, "Featured dish")}
+              </Text>
             </Pressable>
           ))}
         </View>
       </View>
 
       <View style={styles.recommendationSection}>
-        <Text style={styles.sectionTitle}>Recent traveler journals</Text>
+        <Text style={styles.sectionTitle}>Featured guide journals</Text>
         <View style={styles.emptyResultBox}>
           <Text style={styles.emptyResultText}>
-            Read route notes from travelers, then continue into region, food,
-            and place guides.
+            Browse curated route notes, then continue into region, food, and
+            place guides.
           </Text>
         </View>
       </View>
@@ -266,30 +414,52 @@ export default function HomeScreen() {
       <View style={styles.summaryRow}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>{mockJournals.length}</Text>
-          <Text style={styles.summaryLabel}>journals</Text>
+          <Text style={styles.summaryLabel}>guides</Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryValue}>
             {featuredJournal?.scores.recommendation ?? 0}
           </Text>
-          <Text style={styles.summaryLabel}>top score</Text>
+          <Text style={styles.summaryLabel}>top guide score</Text>
         </View>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryValue}>
-            {mockJournals.reduce(
-              (total, journal) => total + journal.pointReward,
-              0,
-            )}
-          </Text>
+          <Text style={styles.summaryValue}>{totalRewardPoints}</Text>
           <Text style={styles.summaryLabel}>reward points</Text>
         </View>
       </View>
 
+      {Platform.OS === "web" ? (
+        <Pressable
+          accessibilityLabel="Refresh curated K-Food Guide content"
+          accessibilityRole="button"
+          onPress={handleRefresh}
+          style={({ pressed }) => [
+            styles.searchPageButton,
+            pressed && styles.pressed,
+          ]}
+        >
+          <Text style={styles.searchPageButtonText}>Refresh guide content</Text>
+        </Pressable>
+      ) : null}
+
       <FeedSortTabs activeKey={activeSortKey} onChange={setActiveSortKey} />
 
-      {errorMessage ? (
+      {statusMessage ? (
         <View style={styles.stateBox}>
-          <Text style={styles.stateText}>{errorMessage}</Text>
+          <Text style={styles.stateText}>{statusMessage}</Text>
+          {lastHiddenJournalId ? (
+            <Pressable
+              accessibilityLabel="Restore the hidden guide to the feed"
+              accessibilityRole="button"
+              onPress={handleUndoHideJournal}
+              style={({ pressed }) => [
+                styles.undoButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={styles.undoButtonText}>Undo hide</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -298,16 +468,17 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <SeoHead
-        title="K-Food Travel | Korean food routes, maps, and traveler journals"
-        description="Discover Korean food travel routes by region, dish, place, and traveler journal with curated K-Food guides and map-based planning."
+        title="K-Food Travel | Korean food routes, maps, and guide journals"
+        description="Discover Korean food travel routes by region, dish, place, and curated guide journal with K-Food guides and map-based planning."
         path="/"
       />
       <FlatList
         ListEmptyComponent={
           <View style={[styles.content, styles.emptyState]}>
-            <Text style={styles.emptyTitle}>No journals to show</Text>
+            <Text style={styles.emptyTitle}>No guides to show</Text>
             <Text style={styles.stateText}>
-              Change the sort or refresh to restore the curated feed.
+              Refresh guide content or undo hidden guides to restore the curated
+              feed.
             </Text>
           </View>
         }
@@ -320,21 +491,7 @@ export default function HomeScreen() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
-        renderItem={({ item }) => (
-          <View style={styles.content}>
-            <JournalCard
-              journal={item}
-              onPress={() => router.push(`/journals/${item.id}` as Href)}
-            />
-            <Text
-              accessibilityRole="button"
-              onPress={() => handleHideJournal(item.id)}
-              style={styles.hideAction}
-            >
-              Hide from feed
-            </Text>
-          </View>
-        )}
+        renderItem={renderJournalItem}
         removeClippedSubviews
         updateCellsBatchingPeriod={50}
         windowSize={7}
@@ -536,18 +693,40 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.size.caption,
     fontWeight: "600",
   },
-  hideAction: {
+  hideActionButton: {
     alignSelf: "flex-end",
+    borderRadius: theme.radius.button,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  hideAction: {
     color: theme.colors.textSecondary,
     fontSize: theme.typography.size.caption,
     fontWeight: "700",
   },
   stateBox: {
+    gap: theme.spacing.sm,
     borderRadius: theme.radius.input,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
     padding: theme.spacing.md,
+  },
+  undoButton: {
+    alignSelf: "flex-start",
+    borderRadius: theme.radius.button,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+  },
+  undoButtonText: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.size.caption,
+    fontWeight: "700",
   },
   stateText: {
     color: theme.colors.textSecondary,
