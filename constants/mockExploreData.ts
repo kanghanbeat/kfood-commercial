@@ -39,6 +39,18 @@ export const mockRegions: Region[] = [
     recommendedPlaceIds: ['place-jeonju-hanok-village', 'place-nambu-market'],
     tags: ['heritage', 'traditional', 'walkable'],
   },
+  {
+    id: 'region-jeju',
+    nameKo: '제주',
+    nameEn: 'Jeju',
+    level: 'province',
+    imageUrl: 'https://images.unsplash.com/photo-1579169825453-8d4b465c8c17?auto=format&fit=crop&w=1200&q=80',
+    description:
+      'An island food route for black pork barbecue, seafood noodles, citrus desserts, coastal markets, and scenic cafe stops.',
+    representativeFoodIds: ['food-black-pork', 'food-seafood-noodles'],
+    recommendedPlaceIds: ['place-jeju-black-pork-street', 'place-jeju-dongmun-market'],
+    tags: ['island food', 'coastal', 'slow travel'],
+  },
 ];
 
 export const mockFoods: Food[] = [
@@ -107,6 +119,28 @@ export const mockFoods: Food[] = [
     imageUrl: 'https://images.unsplash.com/photo-1625938145744-e3805153992b?auto=format&fit=crop&w=1200&q=80',
     tags: ['bean sprout', 'breakfast', 'Jeonju'],
     recommendedPlaceIds: ['place-nambu-market'],
+  },
+  {
+    id: 'food-black-pork',
+    nameKo: '흑돼지구이',
+    nameEn: 'Black Pork Barbecue',
+    category: 'local_specialty',
+    regionIds: ['region-jeju'],
+    description: 'Jeju-style pork grilled at the table with local sides, dipping sauces, and island produce.',
+    imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
+    tags: ['barbecue', 'Jeju', 'grill'],
+    recommendedPlaceIds: ['place-jeju-black-pork-street'],
+  },
+  {
+    id: 'food-seafood-noodles',
+    nameKo: '해물국수',
+    nameEn: 'Seafood Noodles',
+    category: 'local_specialty',
+    regionIds: ['region-jeju'],
+    description: 'Noodles served with coastal seafood broth, shellfish, and light island flavors.',
+    imageUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=80',
+    tags: ['seafood', 'noodles', 'coastal'],
+    recommendedPlaceIds: ['place-jeju-dongmun-market'],
   },
 ];
 
@@ -197,6 +231,34 @@ export const mockPlaces: Place[] = [
     imageUrl: 'https://images.unsplash.com/photo-1516211697506-8360dbcfe9a4?auto=format&fit=crop&w=1200&q=80',
     tags: ['market', 'breakfast', 'local'],
     recommendationTags: ['morning food', 'local specialty'],
+  },
+  {
+    id: 'place-jeju-black-pork-street',
+    name: 'Jeju Black Pork Street',
+    category: 'restaurant',
+    regionId: 'region-jeju',
+    relatedFoodIds: ['food-black-pork'],
+    address: 'Gwandeok-ro 15-gil, Jeju-si, Jeju-do',
+    location: { latitude: 33.5124, longitude: 126.5235 },
+    rating: 4.2,
+    userRatingCount: 12800,
+    imageUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80',
+    tags: ['black pork', 'dinner route', 'local grill'],
+    recommendationTags: ['island food', 'group dinner'],
+  },
+  {
+    id: 'place-jeju-dongmun-market',
+    name: 'Dongmun Market Food Street',
+    category: 'market',
+    regionId: 'region-jeju',
+    relatedFoodIds: ['food-seafood-noodles'],
+    address: '20 Gwandeok-ro 14-gil, Jeju-si, Jeju-do',
+    location: { latitude: 33.5116, longitude: 126.5263 },
+    rating: 4.1,
+    userRatingCount: 18600,
+    imageUrl: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?auto=format&fit=crop&w=1200&q=80',
+    tags: ['market', 'seafood', 'night snacks'],
+    recommendationTags: ['market walk', 'seafood route'],
   },
 ];
 

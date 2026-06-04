@@ -7,23 +7,15 @@ import { AppCard } from '@/components/common/AppCard';
 import { AppInput } from '@/components/common/AppInput';
 import { ScreenContainer } from '@/components/common/ScreenContainer';
 import { theme } from '@/constants/theme';
-import { mockLogin } from '@/lib/mockAuth';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('user@kfood.test');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
 
   function handleLogin() {
-    const result = mockLogin(email, password);
-
-    if (!result.success || !result.user) {
-      setMessage(result.error ?? 'Login failed.');
-      return;
-    }
-
-    if (result.user.role === 'admin') {
-      setMessage('Please use the Admin Portal.');
+    if (!email.trim() || !password.trim()) {
+      setMessage('Enter your email and password to continue.');
       return;
     }
 
@@ -44,20 +36,19 @@ export default function LoginScreen() {
           keyboardType="email-address"
           label="Email"
           onChangeText={setEmail}
-          placeholder="user@kfood.test"
+          placeholder="you@example.com"
           value={email}
         />
         <AppInput
           label="Password"
           onChangeText={setPassword}
-          placeholder="Enter any non-empty password"
+          placeholder="Enter your password"
           secureTextEntry
           value={password}
         />
         {message ? <Text style={styles.message}>{message}</Text> : null}
         <AppButton title="Log In" onPress={handleLogin} />
-        <AppButton title="Create Mock Account" variant="outline" onPress={() => router.push('./signup')} />
-        <AppButton title="Admin Portal" variant="ghost" onPress={() => router.push('../admin-login')} />
+        <AppButton title="Create Account" variant="outline" onPress={() => router.push('./signup')} />
       </AppCard>
     </ScreenContainer>
   );

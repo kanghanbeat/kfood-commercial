@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin-auth
+Disallow: /admin-auth/
+Disallow: /admin-login
+Disallow: /api
+Disallow: /api/
+Disallow: /debug
+Disallow: /debug/
+
+Sitemap: https://kfoodtravel.app/sitemap.xml

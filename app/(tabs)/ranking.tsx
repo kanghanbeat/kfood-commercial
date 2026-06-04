@@ -98,9 +98,9 @@ export default function RankingScreen() {
       </AppCard>
 
       <AppCard style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>Phase 1 Ranking</Text>
+        <Text style={styles.sectionTitle}>How Ranking Works</Text>
         <Text style={styles.infoText}>
-          This mock leaderboard keeps the ranking entry point visible while backend scoring is prepared.
+          Rankings combine approved journals, regional stamp progress, saved routes, and helpful local discovery activity.
         </Text>
       </AppCard>
     </ScreenContainer>

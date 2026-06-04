@@ -4,6 +4,7 @@ import type { Href } from 'expo-router';
 
 import { ScreenContainer } from '@/components/common/ScreenContainer';
 import { PlacePreviewCard } from '@/components/explore/PlacePreviewCard';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { getFoodById, getPlaceById, getPlacesByFood, getRegionById } from '@/constants/mockExploreData';
 import { theme } from '@/constants/theme';
 
@@ -30,9 +31,15 @@ export default function FoodDetailScreen() {
   if (!food) {
     return (
       <ScreenContainer>
+        <SeoHead
+          title="Food guide not found | K-Food Travel"
+          description="This K-Food Travel food guide is not available. Continue exploring curated Korean food routes."
+          path={`/foods/${foodId ?? ''}`}
+          noIndex
+        />
         <View style={styles.fallbackCard}>
           <Text style={styles.title}>Food not found</Text>
-          <Text style={styles.subtitle}>This food guide is not available in the mock discovery data.</Text>
+          <Text style={styles.subtitle}>This food guide is not available in the curated catalog.</Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.replace('/(tabs)/explore')}
@@ -59,8 +66,20 @@ export default function FoodDetailScreen() {
 
   return (
     <ScreenContainer>
+      <SeoHead
+        title={`${food.nameEn ?? food.nameKo} guide | K-Food Travel`}
+        description={food.description}
+        path={`/foods/${food.id}`}
+        imageUrl={food.imageUrl}
+      />
       <View style={styles.heroCard}>
-        {food.imageUrl ? <Image source={{ uri: food.imageUrl }} style={styles.heroImage} /> : null}
+        {food.imageUrl ? (
+          <Image
+            accessibilityLabel={`${food.nameEn ?? food.nameKo} guide image`}
+            source={{ uri: food.imageUrl }}
+            style={styles.heroImage}
+          />
+        ) : null}
         <View style={styles.heroBody}>
           <Text style={styles.kicker}>{formatCategoryLabel(food.category)}</Text>
           <Text style={styles.title}>{food.nameEn ?? food.nameKo}</Text>

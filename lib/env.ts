@@ -43,6 +43,7 @@ export const supabaseAnonKey = readPublicEnv('EXPO_PUBLIC_SUPABASE_ANON_KEY');
 export const siteUrl = readPublicEnv('EXPO_PUBLIC_SITE_URL') || 'http://localhost:8081';
 export const adminRouteEnabled = parsePublicBoolean(readPublicEnv('EXPO_PUBLIC_ADMIN_ROUTE_ENABLED'), false);
 export const useMockAI = parsePublicBoolean(readPublicEnv('EXPO_PUBLIC_USE_MOCK_AI'), true);
+export const adsenseSiteVerification = readPublicEnv('EXPO_PUBLIC_ADSENSE_SITE_VERIFICATION');
 
 export function validatePublicEnv(): PublicEnvValidation {
   const warnings: string[] = [];
@@ -65,6 +66,10 @@ export function validatePublicEnv(): PublicEnvValidation {
 
   if (appEnv === 'production' && siteUrl.includes('localhost')) {
     warnings.push('EXPO_PUBLIC_SITE_URL should not point to localhost in production.');
+  }
+
+  if (adsenseSiteVerification && adsenseSiteVerification.length < 8) {
+    warnings.push('EXPO_PUBLIC_ADSENSE_SITE_VERIFICATION looks too short for a site verification token.');
   }
 
   if (warnings.length > 0) {

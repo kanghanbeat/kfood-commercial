@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppCard } from '@/components/common/AppCard';
 import { PointBadge } from '@/components/feed/PointBadge';
@@ -10,15 +10,15 @@ import type { Journal } from '@/types/journal';
 
 type JournalCardProps = {
   journal: Journal;
+  onPress?: () => void;
 };
 
-export function JournalCard({ journal }: JournalCardProps) {
+export function JournalCard({ journal, onPress }: JournalCardProps) {
   const image = journal.images[0];
   const foodLabels = journal.foodTags.map((tag) => foodTagLabels[tag]);
   const purposeLabels = journal.travelPurposeTags.map((tag) => travelPurposeLabels[tag]);
-
-  return (
-    <AppCard style={styles.card}>
+  const content = (
+    <>
       <View style={styles.authorRow}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{journal.author.displayName.slice(0, 1)}</Text>
@@ -61,6 +61,24 @@ export function JournalCard({ journal }: JournalCardProps) {
         <Text style={styles.stat}>Comments {journal.commentCount}</Text>
         <Text style={styles.stat}>Views {journal.viewCount}</Text>
       </View>
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <Pressable
+        accessibilityLabel={`Open journal: ${journal.title}`}
+        accessibilityRole="button"
+        onPress={onPress}
+        style={({ pressed }) => pressed && styles.pressed}>
+        <AppCard style={styles.card}>{content}</AppCard>
+      </Pressable>
+    );
+  }
+
+  return (
+    <AppCard style={styles.card}>
+      {content}
     </AppCard>
   );
 }
@@ -138,5 +156,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontSize: theme.typography.size.caption,
     fontWeight: '600',
+  },
+  pressed: {
+    opacity: 0.9,
   },
 });

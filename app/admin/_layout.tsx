@@ -2,6 +2,7 @@ import { Stack, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
+import { SeoHead } from '@/components/seo/SeoHead';
 import { adminRouteEnabled } from '@/lib/env';
 import { checkAccess, getCurrentUser } from '@/lib/mockAuth';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -64,16 +65,30 @@ export default function AdminLayout() {
   if (isCheckingAccess || !hasAdminAccess) {
     return (
       <View style={{ alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+        <SeoHead
+          title="Restricted operations | K-Food Travel"
+          description="Restricted K-Food Travel operations area."
+          path="/admin"
+          noIndex
+        />
         <ActivityIndicator />
       </View>
     );
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
+    <>
+      <SeoHead
+        title="Restricted operations | K-Food Travel"
+        description="Restricted K-Food Travel operations area."
+        path="/admin"
+        noIndex
+      />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+    </>
   );
 }

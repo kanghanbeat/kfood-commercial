@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -48,7 +48,7 @@ export default function UploadScreen() {
     }
   }
 
-  function handleSaveMockPost() {
+  function handleSaveDraft() {
     const hasTitle = draft.title.trim().length > 0;
     const hasFoodName = draft.foodName.trim().length > 0;
 
@@ -60,7 +60,11 @@ export default function UploadScreen() {
       return;
     }
 
-    setSuccessMessage('Mock post saved. Real photo upload and Supabase storage will be added later.');
+    setSuccessMessage('Journal draft saved for review. Photo publishing opens after secure account storage is enabled.');
+  }
+
+  function handleCancel() {
+    router.replace('/' as Href);
   }
 
   return (
@@ -69,9 +73,21 @@ export default function UploadScreen() {
         <Text style={styles.eyebrow}>Shared Upload</Text>
         <Text style={styles.title}>Create K-Food Travel Post</Text>
         <Text style={styles.subtitle}>
-          Upload your food-centered travel story. Real photo upload and Supabase storage will be added later.
+          Draft your food-centered travel story with the route details travelers need before visiting.
         </Text>
       </View>
+
+      <AppCard style={styles.noticeCard}>
+        <Text style={styles.noticeTitle}>Before you publish</Text>
+        <Text style={styles.noticeText}>
+          Upload only photos and notes you have the right to share. Do not include private documents, payment details,
+          medical information, or identifiable people without permission.
+        </Text>
+        <Text style={styles.noticeText}>
+          Food photos may be reviewed for safety and may be analyzed by server-side AI. AI results are only a reference,
+          and reported content can be limited or removed during moderation.
+        </Text>
+      </AppCard>
 
       <AppCard style={styles.formCard}>
         <AppInput
@@ -101,16 +117,16 @@ export default function UploadScreen() {
           value={draft.travelNote}
         />
         <AppInput
-          label="Mock image placeholder text"
+          label="Photo note"
           onChangeText={(value) => updateDraft('imagePlaceholder', value)}
           placeholder="Optional: describe the food photo"
           value={draft.imagePlaceholder}
         />
 
         <View style={styles.imagePlaceholder}>
-          <Text style={styles.imagePlaceholderTitle}>Photo upload placeholder</Text>
+          <Text style={styles.imagePlaceholderTitle}>Photo publishing</Text>
           <Text style={styles.imagePlaceholderText}>
-            {draft.imagePlaceholder.trim() || 'No image selected. Image picker will be added later.'}
+            {draft.imagePlaceholder.trim() || 'Add a short photo note while secure media upload is being prepared.'}
           </Text>
         </View>
 
@@ -121,8 +137,8 @@ export default function UploadScreen() {
         ) : null}
 
         <View style={styles.buttonGroup}>
-          <AppButton onPress={handleSaveMockPost} title="Save Mock Post" />
-          <AppButton onPress={() => router.back()} title="Cancel" variant="outline" />
+          <AppButton onPress={handleSaveDraft} title="Save Journal Draft" />
+          <AppButton onPress={handleCancel} title="Cancel" variant="outline" />
         </View>
       </AppCard>
     </ScreenContainer>
@@ -151,6 +167,21 @@ const styles = StyleSheet.create({
   },
   formCard: {
     padding: theme.spacing.lg,
+  },
+  noticeCard: {
+    padding: theme.spacing.lg,
+    borderColor: '#FED7AA',
+    backgroundColor: '#FFF7ED',
+  },
+  noticeTitle: {
+    color: theme.colors.textPrimary,
+    fontSize: theme.typography.size.body,
+    fontWeight: '700',
+  },
+  noticeText: {
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.size.caption,
+    lineHeight: 20,
   },
   imagePlaceholder: {
     borderWidth: 1,

@@ -1,0 +1,5 @@
+/admin/* / 302
+/admin-login / 302
+/api/* / 404 404
+/debug/* / 404 404
+/* /index.html 200

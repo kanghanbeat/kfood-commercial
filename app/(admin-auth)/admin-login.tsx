@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -6,6 +6,7 @@ import { AppButton } from '@/components/common/AppButton';
 import { AppCard } from '@/components/common/AppCard';
 import { AppInput } from '@/components/common/AppInput';
 import { ScreenContainer } from '@/components/common/ScreenContainer';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { theme } from '@/constants/theme';
 import { adminRouteEnabled } from '@/lib/env';
 import { mockLogin } from '@/lib/mockAuth';
@@ -13,7 +14,7 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 import { login } from '@/services/authService';
 
 export default function AdminLoginScreen() {
-  const [email, setEmail] = useState('admin@kfood.test');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
@@ -57,12 +58,42 @@ export default function AdminLoginScreen() {
     router.replace('../admin');
   }
 
+  if (!adminRouteEnabled) {
+    return (
+      <ScreenContainer style={styles.container}>
+        <SeoHead
+          title="Operations access unavailable | K-Food Travel"
+          description="K-Food Travel operations access is disabled in this environment."
+          path="/admin-login"
+          noIndex
+        />
+        <View style={styles.header}>
+          <Text style={styles.eyebrow}>Restricted</Text>
+          <Text style={styles.title}>Operations access is unavailable</Text>
+          <Text style={styles.subtitle}>
+            The operations portal is disabled in this environment. Public K-Food Travel pages remain available.
+          </Text>
+        </View>
+
+        <AppCard style={styles.card}>
+          <AppButton title="Back to K-Food Travel" onPress={() => router.replace('/' as Href)} />
+        </AppCard>
+      </ScreenContainer>
+    );
+  }
+
   return (
     <ScreenContainer style={styles.container}>
+      <SeoHead
+        title="Operations sign in | K-Food Travel"
+        description="Restricted K-Food Travel operations sign-in."
+        path="/admin-login"
+        noIndex
+      />
       <View style={styles.header}>
         <Text style={styles.eyebrow}>Admin Portal</Text>
         <Text style={styles.title}>K-Food Operations</Text>
-        <Text style={styles.subtitle}>Sign in with an admin account to review dashboard placeholders.</Text>
+        <Text style={styles.subtitle}>Sign in with an authorized operations account.</Text>
       </View>
 
       <AppCard style={styles.card}>
@@ -70,13 +101,13 @@ export default function AdminLoginScreen() {
           keyboardType="email-address"
           label="Admin Email"
           onChangeText={setEmail}
-          placeholder="admin@kfood.test"
+          placeholder="admin@example.com"
           value={email}
         />
         <AppInput
           label="Password"
           onChangeText={setPassword}
-          placeholder="Enter any non-empty password"
+          placeholder="Enter your password"
           secureTextEntry
           value={password}
         />

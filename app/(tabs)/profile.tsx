@@ -22,11 +22,12 @@ import { getMyRegionProgress } from '@/services/gamificationService';
 import type { RegionBadge } from '@/types/stamp';
 
 const legalLinks = [
-  { title: 'Privacy Policy', route: '../legal/privacy' },
-  { title: 'Terms of Service', route: '../legal/terms' },
-  { title: 'UGC Policy', route: '../legal/ugc' },
-  { title: 'AI Analysis Notice', route: '../legal/ai' },
-  { title: 'Maps Link Notice', route: '../legal/maps' },
+  { title: 'Privacy Policy', route: '/privacy' },
+  { title: 'Terms of Service', route: '/terms' },
+  { title: 'Content Policy', route: '/content-policy' },
+  { title: 'Report Policy', route: '/report-policy' },
+  { title: 'AI Disclaimer', route: '/ai-disclaimer' },
+  { title: 'Cookie Policy', route: '/cookie-policy' },
 ] as const;
 
 export default function ProfileScreen() {
@@ -147,7 +148,7 @@ export default function ProfileScreen() {
         <View style={styles.summaryTrack}>
           <View style={[styles.summaryFill, { width: `${stampSummary.completionPercent}%` }]} />
         </View>
-        <Text style={styles.profileEmail}>{stampSummary.completionPercent}% complete across mock missions</Text>
+        <Text style={styles.profileEmail}>{stampSummary.completionPercent}% complete across regional missions</Text>
       </AppCard>
 
       <View style={styles.section}>
@@ -174,14 +175,14 @@ export default function ProfileScreen() {
 
       <AppCard style={styles.profileCard}>
         <Text style={styles.sectionTitle}>Legal & Safety</Text>
-        <Text style={styles.profileEmail}>Release policy drafts and safety notices for store review.</Text>
+        <Text style={styles.profileEmail}>Policy notices for privacy, community safety, AI analysis, and external maps.</Text>
         <View style={styles.legalButtonGroup}>
           {legalLinks.map((item) => (
             <AppButton
               key={item.title}
               title={item.title}
               variant="outline"
-              onPress={() => router.push(item.route)}
+              onPress={() => router.push(item.route as Href)}
             />
           ))}
         </View>

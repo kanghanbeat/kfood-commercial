@@ -5,6 +5,7 @@ import type { Href } from 'expo-router';
 import { ScreenContainer } from '@/components/common/ScreenContainer';
 import { FoodPreviewCard } from '@/components/explore/FoodPreviewCard';
 import { PlacePreviewCard } from '@/components/explore/PlacePreviewCard';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { getFoodById, getPlaceById, getRegionById } from '@/constants/mockExploreData';
 import { theme } from '@/constants/theme';
 
@@ -24,9 +25,15 @@ export default function RegionDetailScreen() {
   if (!region) {
     return (
       <ScreenContainer>
+        <SeoHead
+          title="Region guide not found | K-Food Travel"
+          description="This K-Food Travel region guide is not available. Continue exploring curated Korean food routes."
+          path={`/regions/${regionId ?? ''}`}
+          noIndex
+        />
         <View style={styles.fallbackCard}>
           <Text style={styles.title}>Region not found</Text>
-          <Text style={styles.subtitle}>This region guide is not available in the mock discovery data.</Text>
+          <Text style={styles.subtitle}>This region guide is not available in the curated catalog.</Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.replace('/(tabs)/explore')}
@@ -49,8 +56,20 @@ export default function RegionDetailScreen() {
 
   return (
     <ScreenContainer>
+      <SeoHead
+        title={`${region.nameEn ?? region.nameKo} K-Food guide | K-Food Travel`}
+        description={region.description}
+        path={`/regions/${region.id}`}
+        imageUrl={region.imageUrl}
+      />
       <View style={styles.heroCard}>
-        {region.imageUrl ? <Image source={{ uri: region.imageUrl }} style={styles.heroImage} /> : null}
+        {region.imageUrl ? (
+          <Image
+            accessibilityLabel={`${region.nameEn ?? region.nameKo} food travel guide`}
+            source={{ uri: region.imageUrl }}
+            style={styles.heroImage}
+          />
+        ) : null}
         <View style={styles.heroBody}>
           <Text style={styles.kicker}>Region Guide</Text>
           <Text style={styles.title}>{region.nameEn ?? region.nameKo}</Text>

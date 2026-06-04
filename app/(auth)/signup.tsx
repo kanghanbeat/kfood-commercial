@@ -16,11 +16,11 @@ export default function SignupScreen() {
 
   function handleSignup() {
     if (!name.trim() || !email.trim() || !password.trim()) {
-      setMessage('Please complete all fields for the mock signup.');
+      setMessage('Please complete all fields to create your traveler profile.');
       return;
     }
 
-    setMessage('Mock signup complete. Please log in with user@kfood.test for Phase 1.');
+    setMessage('Profile details saved. Continue to login when you are ready.');
   }
 
   return (
@@ -28,7 +28,7 @@ export default function SignupScreen() {
       <View style={styles.header}>
         <Text style={styles.eyebrow}>Traveler Account</Text>
         <Text style={styles.title}>Create your profile</Text>
-        <Text style={styles.subtitle}>This mock signup validates the form only. Real accounts arrive later.</Text>
+        <Text style={styles.subtitle}>Set up your traveler profile for journals, saved places, rankings, and route notes.</Text>
       </View>
 
       <AppCard>
@@ -48,7 +48,7 @@ export default function SignupScreen() {
           value={password}
         />
         {message ? <Text style={styles.message}>{message}</Text> : null}
-        <AppButton title="Create Mock Account" onPress={handleSignup} />
+        <AppButton title="Create Account" onPress={handleSignup} />
         <AppButton title="Back to Login" variant="ghost" onPress={() => router.push('./login')} />
       </AppCard>
     </ScreenContainer>

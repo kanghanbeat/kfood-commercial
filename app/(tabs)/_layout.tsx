@@ -3,10 +3,6 @@ import React from "react";
 
 import { theme } from "@/constants/theme";
 
-const hiddenTabOptions = {
-  href: null,
-};
-
 export default function TabLayout() {
   return (
     <Tabs
@@ -24,33 +20,47 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
+          tabBarLabel: "Home",
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: "Map",
+          tabBarLabel: "Map",
         }}
       />
       <Tabs.Screen
         name="ranking"
         options={{
-          title: "Ranking",
+          title: "Rank",
+          tabBarLabel: "Rank",
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
+          tabBarLabel: "Profile",
+        }}
+      />
+      <Tabs.Screen
+        name="create"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="upload"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen
         name="search"
-        options={hiddenTabOptions}
-      />
-      <Tabs.Screen
-        name="create"
-        options={hiddenTabOptions}
+        options={{
+          href: null,
+        }}
       />
     </Tabs>
   );

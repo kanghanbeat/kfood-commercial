@@ -5,6 +5,7 @@ import type { Href } from 'expo-router';
 import { ScreenContainer } from '@/components/common/ScreenContainer';
 import { FoodPreviewCard } from '@/components/explore/FoodPreviewCard';
 import { PlaceLinkCard } from '@/components/map/PlaceLinkCard';
+import { SeoHead } from '@/components/seo/SeoHead';
 import { getFoodById, getPlaceById, getRegionById } from '@/constants/mockExploreData';
 import { theme } from '@/constants/theme';
 
@@ -14,6 +15,10 @@ function foodHref(foodId: string): Href {
 
 function regionHref(regionId: string): Href {
   return `/regions/${regionId}` as Href;
+}
+
+function searchHref(query: string): Href {
+  return `/search?query=${encodeURIComponent(query)}` as Href;
 }
 
 function formatCategoryLabel(category: string): string {
@@ -31,9 +36,15 @@ export default function PlaceDetailScreen() {
   if (!place) {
     return (
       <ScreenContainer>
+        <SeoHead
+          title="Place not found | K-Food Travel"
+          description="This K-Food Travel place guide is not available. Continue exploring curated Korean food routes."
+          path={`/place/${id ?? ''}`}
+          noIndex
+        />
         <View style={styles.fallbackCard}>
           <Text style={styles.title}>Place not found</Text>
-          <Text style={styles.subtitle}>This place is not available in the mock discovery data.</Text>
+          <Text style={styles.subtitle}>This place is not available in the curated catalog.</Text>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.replace('/(tabs)/explore')}
@@ -53,8 +64,20 @@ export default function PlaceDetailScreen() {
 
   return (
     <ScreenContainer>
+      <SeoHead
+        title={`${place.name} food travel stop | K-Food Travel`}
+        description={`${place.address}. Explore related foods, region guides, traveler journals, and Google Maps planning for this K-Food stop.`}
+        path={`/place/${place.id}`}
+        imageUrl={place.imageUrl}
+      />
       <View style={styles.heroCard}>
-        {place.imageUrl ? <Image source={{ uri: place.imageUrl }} style={styles.heroImage} /> : null}
+        {place.imageUrl ? (
+          <Image
+            accessibilityLabel={`${place.name} food travel stop`}
+            source={{ uri: place.imageUrl }}
+            style={styles.heroImage}
+          />
+        ) : null}
         <View style={styles.heroBody}>
           <Text style={styles.kicker}>{formatCategoryLabel(place.category)}</Text>
           <Text style={styles.title}>{place.name}</Text>
@@ -99,6 +122,16 @@ export default function PlaceDetailScreen() {
             onPress={() => router.push(foodHref(food.id))}
           />
         ))}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Traveler Journals</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push(searchHref(place.name))}
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
+          <Text style={styles.secondaryButtonText}>Find journals near this stop</Text>
+        </Pressable>
       </View>
     </ScreenContainer>
   );
@@ -220,6 +253,25 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: theme.colors.surface,
+    fontSize: theme.typography.size.body,
+    fontWeight: '700',
+  },
+  secondaryButton: {
+    width: '100%',
+    maxWidth: theme.layout.maxContentWidth,
+    alignSelf: 'center',
+    minHeight: 52,
+    borderRadius: theme.radius.button,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+  },
+  secondaryButtonText: {
+    color: theme.colors.primary,
     fontSize: theme.typography.size.body,
     fontWeight: '700',
   },

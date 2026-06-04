@@ -1,3 +1,4 @@
+import { router, type Href } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -18,10 +19,39 @@ function hasSearchValue(value: string): boolean {
   return value.trim().length > 0;
 }
 
+const placeRouteIds: Record<string, string> = {
+  'seoul-gwangjang-bindaetteok': 'place-gwangjang-market',
+  'seoul-bibimbap-table': 'place-gwangjang-market',
+  'seoul-myeongdong-kalguksu': 'place-myeongdong-street-food-alley',
+  'jeonju-bibimbap-house': 'place-jeonju-hanok-village',
+  'jeonju-hanok-makgeolli': 'place-jeonju-hanok-village',
+  'jeonju-kongnamul-gukbap': 'place-nambu-market',
+  'busan-dwaeji-gukbap-street': 'place-biff-square',
+  'busan-milmyeon-local-house': 'place-biff-square',
+  'busan-jagalchi-seafood-route': 'place-jagalchi-market',
+  'jeju-black-pork-grill': 'place-jeju-black-pork-street',
+  'jeju-seafood-noodle-house': 'place-jeju-dongmun-market',
+  'jeju-citrus-cafe-food-stop': 'place-jeju-dongmun-market',
+};
+
+function regionHref(destinationId: string): Href {
+  return `/regions/region-${destinationId}` as Href;
+}
+
+function placeHref(placeId: string): Href {
+  return `/place/${placeId}` as Href;
+}
+
+function searchHref(query: string): Href {
+  const normalizedQuery = query.trim();
+  return normalizedQuery
+    ? (`/search?query=${encodeURIComponent(normalizedQuery)}` as Href)
+    : ('/search' as Href);
+}
+
 export default function ExploreScreen() {
   const [selectedDestinationId, setSelectedDestinationId] = useState('jeonju');
   const [searchQuery, setSearchQuery] = useState('');
-  const [actionMessage, setActionMessage] = useState('');
 
   const searchResults = useMemo(() => getSearchResults(searchQuery), [searchQuery]);
   const defaultRecommendations = useMemo(() => getDefaultRecommendations(), []);
@@ -40,21 +70,26 @@ export default function ExploreScreen() {
     mapDestinations.find((destination) => destination.id === selectedDestinationId) ?? mapDestinations[1];
 
   function handleRoutePreview() {
-    setActionMessage(`Route preview for ${selectedDestination.name} is prepared for a future detail page.`);
+    router.push(regionHref(selectedDestination.id));
   }
 
-  function handleGoogleMapsPlaceholder() {
-    setActionMessage('External Google Maps linking will be connected in a later phase.');
+  function handleOpenSearch() {
+    router.push(searchHref(selectedDestination.name));
   }
 
   function handleSelectSearchResult(result: SearchResult) {
-    setSelectedDestinationId(result.destinationId);
-    setActionMessage(`${result.place.name} is selected on the map for a future place detail page.`);
+    const routePlaceId = placeRouteIds[result.place.id];
+
+    if (routePlaceId) {
+      router.push(placeHref(routePlaceId));
+      return;
+    }
+
+    router.push(regionHref(result.destinationId));
   }
 
   function handleClearSearch() {
     setSearchQuery('');
-    setActionMessage('');
   }
 
   return (
@@ -109,10 +144,9 @@ export default function ExploreScreen() {
                 accessibilityLabel={`Select ${destination.name}`}
                 accessibilityRole="button"
                 key={destination.id}
-                onPress={() => {
-                  setSelectedDestinationId(destination.id);
-                  setActionMessage('');
-                }}
+                  onPress={() => {
+                    setSelectedDestinationId(destination.id);
+                  }}
                 style={({ pressed }) => [
                   styles.marker,
                   {
@@ -195,7 +229,7 @@ export default function ExploreScreen() {
           <Text style={styles.previewTitle}>{selectedDestination.name}</Text>
           <Text style={styles.foodText}>{selectedDestination.representativeFood}</Text>
           <Text style={styles.description}>{selectedDestination.description}</Text>
-          <Text style={styles.placeSummary}>{selectedDestination.places.length} mock K-Food places ready for route planning</Text>
+          <Text style={styles.placeSummary}>{selectedDestination.places.length} curated K-Food stops ready for route planning</Text>
 
           <Pressable
             accessibilityRole="button"
@@ -206,16 +240,10 @@ export default function ExploreScreen() {
 
           <Pressable
             accessibilityRole="button"
-            onPress={handleGoogleMapsPlaceholder}
+            onPress={handleOpenSearch}
             style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}>
-            <Text style={styles.secondaryButtonText}>Open Google Maps later</Text>
+            <Text style={styles.secondaryButtonText}>Search journals for {selectedDestination.name}</Text>
           </Pressable>
-
-          {actionMessage ? (
-            <View style={styles.messageBox}>
-              <Text style={styles.messageText}>{actionMessage}</Text>
-            </View>
-          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
